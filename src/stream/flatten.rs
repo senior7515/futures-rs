@@ -1,4 +1,4 @@
-use Poll;
+use {Poll, Async};
 use stream::Stream;
 
 /// A combinator used to flatten a stream-of-streams into one long stream of
@@ -35,14 +35,13 @@ impl<S> Stream for Flatten<S>
         loop {
             if self.next.is_none() {
                 match try_poll!(self.stream.poll()) {
-                    Ok(Some(e)) => self.next = Some(e),
-                    Ok(None) => return Poll::Ok(None),
-                    Err(e) => return Poll::Err(From::from(e)),
+                    Some(e) => self.next = Some(e),
+                    None => return Ok(Async::Ready(None)),
                 }
             }
             assert!(self.next.is_some());
             match self.next.as_mut().unwrap().poll() {
-                Poll::Ok(None) => self.next = None,
+                Ok(Async::Ready(None)) => self.next = None,
                 other => return other,
             }
         }

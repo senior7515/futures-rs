@@ -168,7 +168,7 @@ macro_rules! if_std {
 
 #[macro_use]
 mod poll;
-pub use poll::Poll;
+pub use poll::{Poll, Async};
 
 // Primitive futures
 mod done;
@@ -227,8 +227,6 @@ if_std! {
             (**self).poll()
         }
     }
-
-
 }
 
 // streams
@@ -750,15 +748,15 @@ pub trait Future {
     /// use futures::*;
     ///
     /// let mut future = finished::<i32, u32>(2);
-    /// assert!(future.poll().is_ready());
+    /// assert_eq!(future.poll(), Ok(Async::Ready(2)));
     ///
     /// // Normally, a call such as this would panic:
     /// //future.poll();
     ///
     /// // This, however, is guaranteed to not panic
     /// let mut future = finished::<i32, u32>(2).fuse();
-    /// assert!(future.poll().is_ready());
-    /// assert!(future.poll().is_not_ready());
+    /// assert_eq!(future.poll(), Ok(Async::Ready(2)));
+    /// assert_eq!(future.poll(), Ok(Async::NotReady));
     /// ```
     fn fuse(self) -> Fuse<Self>
         where Self: Sized
